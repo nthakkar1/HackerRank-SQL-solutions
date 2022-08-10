@@ -1,0 +1,24 @@
+with project_start_date as 
+(
+    select start_date, rank() over(order by start_date) as rank_start
+    from projects
+    where start_date not in (select end_date from projects)
+),
+
+// The above part would give us start date which are not present in end date
+
+
+project_end_date as
+(
+    select end_date, rank() over(order by end_date) as rank_end
+    from projects
+    where end_date not in (select start_date from projects)
+)
+// The above part would give us end date which are not present in start date
+// Once we have the start date and end date of a project we need to match the start and end date, since we used rank which sorted start_date, end_date in asc order, that would
+be 1 project duration, matching both ranks gives us the number of projects, now with start and end date we select datediff func to order our output
+
+Select start_date,end_date 
+from project_start_date, project_end_date
+where rank_start=rank_end
+order by datediff(day,start_date,end_date),start_date
